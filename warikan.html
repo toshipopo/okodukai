@@ -88,15 +88,34 @@ function fmtEvDt(ev){
   }
   return ev.dt||ev.dtFrom||'';
 }
-function load(){
-  try{const r=localStorage.getItem(SK.ev);if(r)EV=JSON.parse(r);}catch(_){}
-  try{const r=localStorage.getItem(SK.ex);if(r)EX=JSON.parse(r);}catch(_){}
-  try{const r=localStorage.getItem(SK.ms);if(r){const m=JSON.parse(r);MS={...DM,...m,members:m.members||[...DM.members],cats:m.cats||[...DM.cats],pays:normPays(m.pays||DM.pays),incats:m.incats||[...DM.incats]};}}catch(_){}
+const GAS_URL='https://script.google.com/macros/s/AKfycbzzKkyxd9ovOhhZZ4ShmXIaS0ERDmc_KvsM8WFu-xCb5CIdi9C_fHzyJndqDAtq0OEqvA/exec';
+
+async function gasRead(){
+  try{
+    const res=await fetch(GAS_URL+'?action=read');
+    const json=await res.json();
+    return json.ok?json.data:{};
+  }catch(_){return {};}
+}
+async function gasWrite(payload){
+  try{
+    const res=await fetch(GAS_URL+'?action=write&payload='+encodeURIComponent(JSON.stringify(payload)));
+    const json=await res.json();
+    if(!json.ok)toast('保存に失敗しました');
+  }catch(_){toast('保存に失敗しました');}
+}
+
+async function load(){
+  document.getElementById('M').innerHTML='<div style="text-align:center;padding:60px 0;color:#888;font-size:14px;">読み込み中...</div>';
+  const d=await gasRead();
+  try{if(d[SK.ev])EV=JSON.parse(d[SK.ev]);}catch(_){}
+  try{if(d[SK.ex])EX=JSON.parse(d[SK.ex]);}catch(_){}
+  try{if(d[SK.ms]){const m=JSON.parse(d[SK.ms]);MS={...DM,...m,members:m.members||[...DM.members],cats:m.cats||[...DM.cats],pays:normPays(m.pays||DM.pays),incats:m.incats||[...DM.incats]};}}catch(_){}
   render();
 }
-async function sEv(v){EV=v;try{localStorage.setItem(SK.ev,JSON.stringify(v));}catch(_){toast('保存に失敗しました');}}
-async function sEx(v){EX=v;try{localStorage.setItem(SK.ex,JSON.stringify(v));}catch(_){toast('保存に失敗しました');}}
-async function sMs(v){MS=v;try{localStorage.setItem(SK.ms,JSON.stringify(v));}catch(_){toast('保存に失敗しました');}}
+async function sEv(v){EV=v;await gasWrite({[SK.ev]:JSON.stringify(v)});}
+async function sEx(v){EX=v;await gasWrite({[SK.ex]:JSON.stringify(v)});}
+async function sMs(v){MS=v;await gasWrite({[SK.ms]:JSON.stringify(v)});}
 function toast(m){clearTimeout(window._TT);document.getElementById('T').innerHTML=`<div class="toast">${esc(m)}</div>`;window._TT=setTimeout(()=>document.getElementById('T').innerHTML='',2000);}
 function cleanupSwipe(){if(_swMM)document.removeEventListener('mousemove',_swMM);if(_swMU)document.removeEventListener('mouseup',_swMU);_swMM=_swMU=null;}
 function go(p,id=null){
