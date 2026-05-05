@@ -258,18 +258,16 @@ function paysListHTML(){
   const pays=normPays(MS.pays||[]);
   if(!pays.length)return'<div style="font-size:12px;color:#aaa;padding:4px 0;">支払方法がありません</div>';
   return pays.map((p,i)=>`<div style="padding:9px 0;border-bottom:${i<pays.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'};">
-    <div style="display:flex;align-items:center;margin-bottom:6px;">
-      <div style="flex:1;font-size:14px;font-weight:500;">${esc(p.nm)}</div>
-      <div style="display:flex;gap:4px;flex-shrink:0;">
+    <div style="font-size:14px;font-weight:500;margin-bottom:6px;">${esc(p.nm)}</div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <div style="font-size:11px;color:#888;">単位</div>
+      <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
+      <button class="chip${p.sp?' on':''}" style="font-size:12px;padding:5px 12px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人負担'}</button>
+      <div style="display:flex;gap:4px;margin-left:auto;">
         <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},-1)">${i>0?'↑':''}</button>
         <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},1)">${i<pays.length-1?'↓':''}</button>
         <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#aaa;font-size:14px;padding:4px 9px;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
       </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <div style="font-size:11px;color:#888;">単位</div>
-      <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
-      <button class="chip${p.sp?' on':''}" style="font-size:12px;padding:5px 12px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人負担'}</button>
     </div>
   </div>`).join('');
 }
