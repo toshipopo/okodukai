@@ -15,7 +15,7 @@ button,input,select{font-family:inherit;cursor:pointer;}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
 .big-btn{width:100%;padding:14px;border-radius:12px;border:none;background:#1a1a18;color:#fff;font-size:15px;font-weight:500;margin-bottom:10px;display:block;}
 .out-btn{width:100%;padding:13px;border-radius:12px;border:0.5px solid rgba(0,0,0,0.2);background:none;color:#1a1a18;font-size:14px;margin-bottom:10px;display:block;}
-.inp{width:100%;padding:12px 13px;border:0.5px solid rgba(0,0,0,0.25);border-radius:8px;font-size:16px;background:#fff;color:#1a1a18;}
+.inp{width:100%;padding:12px 13px;border:0.5px solid rgba(0,0,0,0.25);border-radius:8px;font-size:16px;background:#fff;color:#1a1a18;-webkit-appearance:none;}
 .sel{width:100%;padding:12px 13px;border:0.5px solid rgba(0,0,0,0.25);border-radius:8px;font-size:16px;background:#fff;color:#1a1a18;appearance:none;}
 .lb{font-size:12px;font-weight:500;color:#666;display:block;margin-bottom:5px;}
 .fg{margin-bottom:14px;}
@@ -81,12 +81,15 @@ const normPays=arr=>(arr||[]).map(p=>typeof p==='string'?{nm:p,sp:true,unit:'円
 function fmtEvDt(ev){
   if(ev.dtMode==='range'&&ev.dtFrom&&ev.dtTo){
     const f=ev.dtFrom.split('-'),t=ev.dtTo.split('-');
-    if(ev.dtFrom===ev.dtTo) return`${+f[1]}/${+f[2]}`;
-    if(f[0]===t[0]&&f[1]===t[1]) return`${+f[1]}/${+f[2]}〜${+t[2]}`;
-    if(f[0]===t[0]) return`${+f[1]}/${+f[2]}〜${+t[1]}/${+t[2]}`;
+    if(ev.dtFrom===ev.dtTo) return`${f[0]}/${+f[1]}/${+f[2]}`;
+    if(f[0]===t[0]&&f[1]===t[1]) return`${f[0]}/${+f[1]}/${+f[2]}〜${+t[2]}`;
+    if(f[0]===t[0]) return`${f[0]}/${+f[1]}/${+f[2]}〜${+t[1]}/${+t[2]}`;
     return`${f[0]}/${+f[1]}/${+f[2]}〜${t[0]}/${+t[1]}/${+t[2]}`;
   }
-  return ev.dt||ev.dtFrom||'';
+  const d=(ev.dt||ev.dtFrom||'');
+  if(!d)return'';
+  const p=d.split('-');
+  return`${p[0]}/${+p[1]}/${+p[2]}`;
 }
 const GAS_URL='https://script.google.com/macros/s/AKfycbzzKkyxd9ovOhhZZ4ShmXIaS0ERDmc_KvsM8WFu-xCb5CIdi9C_fHzyJndqDAtq0OEqvA/exec';
 
@@ -226,12 +229,12 @@ const msTags=(arr,key)=>{
   if(!items.length)return key==='members'?'<div class="muted" style="padding:4px 0">まだいません</div>':'';
   return items.map((it,i)=>{
     const v=typeof it==='string'?it:it.nm;
-    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:${i<items.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'}">
+    return `<div style="display:flex;align-items:center;padding:9px 0;border-bottom:${i<items.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'};">
       <div style="flex:1;font-size:14px;">${esc(v)}</div>
-      <div style="display:flex;gap:4px;">
-        ${i>0?udBtn(key,v,-1):'<span style="width:30px;display:inline-block;"></span>'}
-        ${i<items.length-1?udBtn(key,v,1):'<span style="width:30px;display:inline-block;"></span>'}
-        <span class="tag-x" style="padding:3px 7px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;" onclick="msDelTag('${key}',${esc(JSON.stringify(v))})">×</span>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('${key}',${esc(JSON.stringify(v))},-1)">${i>0?'↑':''}</button>
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('${key}',${esc(JSON.stringify(v))},1)">${i<items.length-1?'↓':''}</button>
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#aaa;font-size:14px;padding:4px 9px;" onclick="msDelTag('${key}',${esc(JSON.stringify(v))})">×</button>
       </div>
     </div>`;
   }).join('');
@@ -252,16 +255,17 @@ function msTogglePay(nm){MS.pays=normPays(MS.pays).map(x=>x.nm===nm?{...x,sp:!x.
 function msPayUnit(nm){const inp=document.getElementById('unit-'+nm);if(inp)MS.pays=normPays(MS.pays).map(x=>x.nm===nm?{...x,unit:inp.value.trim()||'円'}:x);sMs({...MS});}
 function paysListHTML(){
   const pays=normPays(MS.pays||[]);
-  return pays.map((p,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:${i<pays.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'}">
+  if(!pays.length)return'<div style="font-size:12px;color:#aaa;padding:4px 0;">支払方法がありません</div>';
+  return pays.map((p,i)=>`<div style="display:flex;align-items:center;padding:9px 0;border-bottom:${i<pays.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'};">
     <div style="flex:1;font-size:14px;">${esc(p.nm)}</div>
-    <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
-    <button class="chip${p.sp?' on':''}" style="font-size:12px;padding:5px 10px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人負担'}</button>
-    <div style="display:flex;gap:4px;">
-      ${i>0?udBtn('pays',p.nm,-1):'<span style="width:30px;display:inline-block;"></span>'}
-      ${i<pays.length-1?udBtn('pays',p.nm,1):'<span style="width:30px;display:inline-block;"></span>'}
-      <button style="background:none;border:none;color:#ccc;font-size:18px;padding:0 2px;line-height:1;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
+    <div style="display:flex;gap:4px;flex-shrink:0;align-items:center;">
+      <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
+      <button class="chip${p.sp?' on':''}" style="font-size:11px;padding:4px 8px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人'}</button>
+      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},-1)">${i>0?'↑':''}</button>
+      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},1)">${i<pays.length-1?'↓':''}</button>
+      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#aaa;font-size:14px;padding:4px 9px;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
     </div>
-  </div>`).join('')||'<div style="font-size:12px;color:#aaa;padding:4px 0;">支払方法がありません</div>';
+  </div>`).join('');
 }
 function reRenderMsPays(){const el=document.getElementById('ms-pays-list');if(el)el.innerHTML=paysListHTML();}
 
@@ -319,8 +323,10 @@ function pageList(){
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">${bdg(ev.st)}<span style="font-size:15px;font-weight:500;color:${net>0?'#c0392b':net<0?'#1a7a45':'inherit'}">${fmt(net)}</span></div></div>`;
   }).join('');
   return hdr('イベント別おこづかい帳',null,`<button class="dk-btn" onclick="go('master')">マスタ</button>`)
-    +`<div class="body">${sorted.length?cards:'<div class="empty"><div style="font-size:15px;margin-bottom:6px;">イベントがありません</div><div style="font-size:13px;">下から作成してください</div></div>'}
-    <button class="big-btn" onclick="go('new_ev')">＋ 新しいイベントを作成</button></div>`;
+    +`<div class="body">
+    <button class="big-btn" onclick="go('new_ev')">＋ 新しいイベントを作成</button>
+    ${sorted.length?cards:'<div class="empty"><div style="font-size:15px;margin-bottom:6px;">イベントがありません</div><div style="font-size:13px;">上のボタンから作成してください</div></div>'}
+    </div>`;
 }
 
 function pageMaster(){
