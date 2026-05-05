@@ -365,7 +365,7 @@ function pageNewEv(){
 }
 
 function pageNewEx(){
-  const ev=selEv();if(!ev)return'';initFEX(ev);
+  const ev=selEv();if(!ev)return'';if(!EDIT_ID)initFEX(ev);
   const payOpts=[{v:'',t:'（なし）'},...normPays(MS.pays||[]).map(p=>({v:p.nm,t:p.nm+(p.sp?' ○':' ×')}))];
   const catOpts=[{v:'',t:'選択してください'},...MS.cats.map(c=>({v:c,t:c}))];
   const isEdit=!!EDIT_ID;
@@ -385,7 +385,7 @@ function pageNewEx(){
 }
 
 function pageNewIn(){
-  const ev=selEv();if(!ev)return'';initFIN(ev);
+  const ev=selEv();if(!ev)return'';if(!EDIT_ID)initFIN(ev);
   const catOpts=[{v:'',t:'選択してください'},...(MS.incats||[]).map(c=>({v:c,t:c}))];
   const isEditIn=!!EDIT_ID;
   return hdr(isEditIn?'収入を編集':'収入を追加',"go('detail')",`<div style="font-size:13px;opacity:.7">${esc(ev.nm)}</div>`)
@@ -493,8 +493,10 @@ function render(){
   document.getElementById('M').innerHTML=p[PAGE]?.()||'';
   if(PAGE==='delete_ev')setupSwipe();
   if(PAGE==='new_ev'){const t=today();['fev-dt','fev-from','fev-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});}
-  if(PAGE==='new_ex'){const el=document.getElementById('fex-dt');if(el)el.value=today();}
-  if(PAGE==='new_in'){const el=document.getElementById('fin-dt');if(el)el.value=today();}
+  if(PAGE==='new_ex'&&!EDIT_ID){const el=document.getElementById('fex-dt');if(el)el.value=today();}
+  if(PAGE==='new_in'&&!EDIT_ID){const el=document.getElementById('fin-dt');if(el)el.value=today();}
+  if(PAGE==='new_ex'&&EDIT_ID){const el=document.getElementById('fex-dt');if(el&&FEX.dt)el.value=FEX.dt;}
+  if(PAGE==='new_in'&&EDIT_ID){const el=document.getElementById('fin-dt');if(el&&FIN.dt)el.value=FIN.dt;}
 }
 load();
 </script>
