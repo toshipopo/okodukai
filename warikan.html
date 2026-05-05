@@ -66,7 +66,7 @@ const SK={ev:'wk5_ev',ex:'wk5_ex',ms:'wk5_ms'};
 const DM={members:['TOSHI','MIDORI'],cats:['飲食費','交通費','ガソリン代','ETC代','レンタカー代','宿泊費','娯楽費','日用品費','お土産代','その他'],pays:[{nm:'ANA Pay',sp:true,unit:'マイル'},{nm:'JCB-SFC',sp:true,unit:'円'},{nm:'VISA-EPOS',sp:true,unit:'円'},{nm:'PayPay',sp:true,unit:'円'},{nm:'電子マネー',sp:true,unit:'円'},{nm:'交通系IC',sp:false,unit:'円'},{nm:'現金',sp:false,unit:'円'}],incats:['餞別','ポイ活','前払金','精算金端数','その他収入']};
 let EV=[],EX=[],MS={...DM,members:[...DM.members],cats:[...DM.cats],pays:DM.pays.map(p=>({...p})),incats:[...DM.incats]};
 let PAGE='list',EVID=null,CU=null,LS={all:true,sel:null},SY=0;
-let FEV={nm:'',dtMode:'single',dtFrom:'',dtTo:'',mb:[],localMb:[]};
+let FEV={nm:'',dtMode:'range',dtFrom:'',dtTo:'',mb:[],localMb:[]};
 let FEX={py:'',sAll:true,sSel:[],amt:'',cat:'',pay:'',dt:'',memo:''};
 let FIN={py:'',sAll:true,sSel:[],amt:'',cat:'',dt:'',memo:''};
 let _swMM=null,_swMU=null,EDIT_ID=null;
@@ -114,6 +114,7 @@ async function load(){
   try{if(d[SK.ev])EV=JSON.parse(d[SK.ev]);}catch(_){}
   try{if(d[SK.ex])EX=JSON.parse(d[SK.ex]);}catch(_){}
   try{if(d[SK.ms]){const m=JSON.parse(d[SK.ms]);MS={...DM,...m,members:m.members||[...DM.members],cats:m.cats||[...DM.cats],pays:normPays(m.pays||DM.pays),incats:m.incats||[...DM.incats]};}}catch(_){}
+  try{const cu=localStorage.getItem('wk5_cu');if(cu)CU=cu;}catch(_){}
   render();
 }
 async function sEv(v){EV=v;await gasWrite({[SK.ev]:JSON.stringify(v)});}
@@ -124,7 +125,7 @@ function cleanupSwipe(){if(_swMM)document.removeEventListener('mousemove',_swMM)
 function go(p,id=null){
   cleanupSwipe();
   if(PAGE==='detail')SY=document.documentElement.scrollTop||0;
-  if(id!==null&&id!==EVID){EVID=id;CU=null;LS={all:true,sel:null};}
+  if(id!==null&&id!==EVID){EVID=id;LS={all:true,sel:null};}
   if(p!=='new_ex'&&p!=='new_in')EDIT_ID=null;
   PAGE=p;render();
   p==='detail'?setTimeout(()=>{document.documentElement.scrollTop=SY;},0):document.documentElement.scrollTop=0;
@@ -157,7 +158,7 @@ const fgH=(label,html)=>`<div class="fg"><label class="lb">${label}</label>${htm
 const selH=(id,opts,val,onch='')=>`<select class="sel" id="${id}" onchange="${onch}">${opts.map(o=>{const v=typeof o==='string'?o:o.v,t=typeof o==='string'?o:o.t;return`<option value="${esc(v)}"${val===v?' selected':''}>${esc(t)}</option>`;}).join('')}</select>`;
 const selEv=()=>EV.find(e=>e.id===EVID);
 
-function initFEV(){FEV={nm:'',dtMode:'single',dtFrom:today(),dtTo:today(),mb:[],localMb:[...MS.members]};}
+function initFEV(){FEV={nm:'',dtMode:'range',dtFrom:today(),dtTo:today(),mb:[],localMb:[...MS.members]};}
 function fevToggleM(name){const i=FEV.mb.indexOf(name);if(i>=0)FEV.mb.splice(i,1);else FEV.mb.push(name);const el=document.getElementById('fev-chips');if(el)el.innerHTML=chipsH(FEV.localMb,FEV.mb,'fevToggleM');}
 function fevAddM(){const inp=document.getElementById('fev-new-m'),v=inp.value.trim();if(!v)return;if(FEV.localMb.includes(v)){toast('すでにいます');return;}FEV.localMb.push(v);FEV.mb.push(v);inp.value='';const el=document.getElementById('fev-chips');if(el)el.innerHTML=chipsH(FEV.localMb,FEV.mb,'fevToggleM');}
 function fevToggleDt(mode){FEV.dtMode=mode;document.getElementById('fev-dt-single').style.display=mode==='single'?'block':'none';document.getElementById('fev-dt-range').style.display=mode==='range'?'grid':'none';document.querySelectorAll('.fev-dt-btn').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));}
@@ -256,20 +257,25 @@ function msPayUnit(nm){const inp=document.getElementById('unit-'+nm);if(inp)MS.p
 function paysListHTML(){
   const pays=normPays(MS.pays||[]);
   if(!pays.length)return'<div style="font-size:12px;color:#aaa;padding:4px 0;">支払方法がありません</div>';
-  return pays.map((p,i)=>`<div style="display:flex;align-items:center;padding:9px 0;border-bottom:${i<pays.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'};">
-    <div style="flex:1;font-size:14px;">${esc(p.nm)}</div>
-    <div style="display:flex;gap:4px;flex-shrink:0;align-items:center;">
+  return pays.map((p,i)=>`<div style="padding:9px 0;border-bottom:${i<pays.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'};">
+    <div style="display:flex;align-items:center;margin-bottom:6px;">
+      <div style="flex:1;font-size:14px;font-weight:500;">${esc(p.nm)}</div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},-1)">${i>0?'↑':''}</button>
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},1)">${i<pays.length-1?'↓':''}</button>
+        <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#aaa;font-size:14px;padding:4px 9px;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="font-size:11px;color:#888;">単位</div>
       <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
-      <button class="chip${p.sp?' on':''}" style="font-size:11px;padding:4px 8px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人'}</button>
-      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},-1)">${i>0?'↑':''}</button>
-      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:13px;padding:4px 9px;width:34px;" onclick="msMoveTag('pays',${esc(JSON.stringify(p.nm))},1)">${i<pays.length-1?'↓':''}</button>
-      <button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#aaa;font-size:14px;padding:4px 9px;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
+      <button class="chip${p.sp?' on':''}" style="font-size:12px;padding:5px 12px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人負担'}</button>
     </div>
   </div>`).join('');
 }
 function reRenderMsPays(){const el=document.getElementById('ms-pays-list');if(el)el.innerHTML=paysListHTML();}
 
-function detPickUser(name){CU=name;toast(`${name} として入力中`);document.getElementById('det-user-picker')?.remove();const b=document.getElementById('det-user-btn');if(b)b.textContent=name+' ▾';}
+function detPickUser(name){CU=name;try{localStorage.setItem('wk5_cu',name);}catch(_){}toast(`${name} として入力中`);document.getElementById('det-user-picker')?.remove();const b=document.getElementById('det-user-btn');if(b)b.textContent=name+' ▾';}
 function detToggleUserPicker(){
   const ev=selEv();if(!ev)return;
   const existing=document.getElementById('det-user-picker');
@@ -349,9 +355,9 @@ function pageNewEv(){
     +`<div class="body"><div class="card">`
     +fgH('イベント名','<input class="inp" id="fev-nm" placeholder="例：忘年会、旅行" type="text">')
     +`<div class="fg"><label class="lb">開催日</label>
-    <div class="fw" style="gap:6px;margin-bottom:8px;"><button class="chip fev-dt-btn on" data-mode="single" onclick="fevToggleDt('single')">単日</button><button class="chip fev-dt-btn" data-mode="range" onclick="fevToggleDt('range')">複数日</button></div>
-    <div id="fev-dt-single"><input class="inp" id="fev-dt" type="date" value="${today()}"></div>
-    <div id="fev-dt-range" style="display:none;grid-template-columns:1fr 1fr;gap:8px;">
+    <div class="fw" style="gap:6px;margin-bottom:8px;"><button class="chip fev-dt-btn" data-mode="single" onclick="fevToggleDt('single')">単日</button><button class="chip fev-dt-btn on" data-mode="range" onclick="fevToggleDt('range')">複数日</button></div>
+    <div id="fev-dt-single" style="display:none;"><input class="inp" id="fev-dt" type="date" value="${today()}"></div>
+    <div id="fev-dt-range" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div><div style="font-size:11px;color:#888;margin-bottom:4px;">開始日</div><input class="inp" id="fev-from" type="date" value="${today()}"></div>
       <div><div style="font-size:11px;color:#888;margin-bottom:4px;">終了日</div><input class="inp" id="fev-to" type="date" value="${today()}"></div>
     </div></div>`
