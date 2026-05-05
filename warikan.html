@@ -371,16 +371,16 @@ function pageNewEx(){
   const isEdit=!!EDIT_ID;
   return hdr(isEdit?'支出を編集':'支出を追加',"go('detail')",`<div style="font-size:13px;opacity:.7">${esc(ev.nm)}</div>`)
     +`<div class="body"><div class="card">`
-    +fgH('金額（円）','<input class="inp" id="fex-amt" type="number" inputmode="numeric" placeholder="0" style="font-size:28px;font-weight:500;text-align:center;">')
+    +fgH('金額（円）',`<input class="inp" id="fex-amt" type="number" inputmode="numeric" placeholder="0" value="${FEX.amt||''}" style="font-size:28px;font-weight:500;text-align:center;">`)
     +'<div class="divider"></div>'
     +`<div class="fg"><label class="lb">支払者</label><div id="fex-payer" class="fw">${chipsH(ev.mb,[FEX.py],'fexSelPayer')}</div></div>`
     +`<div class="fg"><label class="lb">対象者</label>
     <div id="fex-split-btns" class="fw" style="margin-bottom:8px;"><button class="chip${FEX.sAll?' on':''}" onclick="fexToggleSAll(true)">全員(${ev.mb.length}人)</button><button class="chip${FEX.sAll?'':' on'}" onclick="fexToggleSAll(false)">選択する</button></div>
-    <div id="fex-split-chips" class="fw"></div></div>`
-    +fgH('カテゴリ',selH('fex-cat',catOpts,''))
-    +`<div class="fg"><label class="lb">支払方法</label>${selH('fex-pay',payOpts,'','fexUpdatePayNote')}<div id="fex-pay-note" style="font-size:11px;margin-top:5px;"></div></div>`
-    +fgH('日付',`<input class="inp" id="fex-dt" type="date" value="${today()}">`)
-    +fgH('メモ（任意）','<input class="inp" id="fex-memo" type="text" placeholder="メモ（任意）">')
+    <div id="fex-split-chips" class="fw">${FEX.sAll?'':chipsH(ev.mb,FEX.sSel,'fexToggleSM')}</div></div>`
+    +fgH('カテゴリ',selH('fex-cat',catOpts,FEX.cat||''))
+    +`<div class="fg"><label class="lb">支払方法</label>${selH('fex-pay',payOpts,FEX.pay||'','fexUpdatePayNote')}<div id="fex-pay-note" style="font-size:11px;margin-top:5px;"></div></div>`
+    +fgH('日付',`<input class="inp" id="fex-dt" type="date">`)
+    +fgH('メモ（任意）',`<input class="inp" id="fex-memo" type="text" placeholder="メモ（任意）" value="${esc(FEX.memo||'')}">`)
     +`</div><button class="big-btn" onclick="fexSave()">${isEdit?'更新する':'追加する'}</button></div>`;
 }
 
@@ -390,15 +390,15 @@ function pageNewIn(){
   const isEditIn=!!EDIT_ID;
   return hdr(isEditIn?'収入を編集':'収入を追加',"go('detail')",`<div style="font-size:13px;opacity:.7">${esc(ev.nm)}</div>`)
     +`<div class="body"><div class="card">`
-    +fgH('金額（円）','<input class="inp" id="fin-amt" type="number" inputmode="numeric" placeholder="0" style="font-size:28px;font-weight:500;text-align:center;">')
+    +fgH('金額（円）',`<input class="inp" id="fin-amt" type="number" inputmode="numeric" placeholder="0" value="${FIN.amt||''}" style="font-size:28px;font-weight:500;text-align:center;">`)
     +'<div class="divider"></div>'
     +`<div class="fg"><label class="lb">受取人</label><div id="fin-payer" class="fw">${chipsH(ev.mb,[FIN.py],'finSelPayer')}</div></div>`
     +`<div class="fg"><label class="lb">分配対象</label>
-    <div id="fin-split-btns" class="fw" style="margin-bottom:8px;"><button class="chip on" onclick="finToggleSAll(true)">全員(${ev.mb.length}人)</button><button class="chip" onclick="finToggleSAll(false)">選択する</button></div>
-    <div id="fin-split-chips" class="fw"></div></div>`
-    +fgH('カテゴリ',selH('fin-cat',catOpts,''))
-    +fgH('日付',`<input class="inp" id="fin-dt" type="date" value="${today()}">`)
-    +fgH('メモ（任意）','<input class="inp" id="fin-memo" type="text" placeholder="メモ（任意）">')
+    <div id="fin-split-btns" class="fw" style="margin-bottom:8px;"><button class="chip${FIN.sAll?' on':''}" onclick="finToggleSAll(true)">全員(${ev.mb.length}人)</button><button class="chip${FIN.sAll?'':' on'}" onclick="finToggleSAll(false)">選択する</button></div>
+    <div id="fin-split-chips" class="fw">${FIN.sAll?'':chipsH(ev.mb,FIN.sSel,'finToggleSM')}</div></div>`
+    +fgH('カテゴリ',selH('fin-cat',catOpts,FIN.cat||''))
+    +fgH('日付',`<input class="inp" id="fin-dt" type="date">`)
+    +fgH('メモ（任意）',`<input class="inp" id="fin-memo" type="text" placeholder="メモ（任意）" value="${esc(FIN.memo||'')}">`)
     +`</div><button class="big-btn" style="background:#1a7a45;" onclick="finSave()">${isEditIn?'更新する':'追加する'}</button></div>`;
 }
 
