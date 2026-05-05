@@ -209,7 +209,33 @@ async function finSave(){
   EDIT_ID=null;go('detail');
 }
 
-const msTags=(arr,key)=>(arr||[]).map(it=>{const v=typeof it==='string'?it:it.nm;return`<div class="tag">${esc(v)}<span class="tag-x" onclick="msDelTag('${key}',${esc(JSON.stringify(v))})">×</span></div>`;}).join('')||(key==='members'?'<div class="muted" style="padding:4px 0">まだいません</div>':'');
+function msMoveTag(key,val,dir){
+  const arr=MS[key]||[];
+  const i=arr.findIndex(x=>(x.nm||x)===val);
+  if(i<0)return;
+  const ni=i+dir;
+  if(ni<0||ni>=arr.length)return;
+  const a=[...arr];[a[i],a[ni]]=[a[ni],a[i]];
+  MS[key]=a;sMs({...MS});
+  if(key==='pays')reRenderMsPays();else{const el=document.getElementById(`ms-tags-${key}`);if(el)el.innerHTML=msTags(MS[key],key);}
+}
+const udBtn=(key,val,dir)=>`<button style="background:none;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;color:#888;font-size:12px;padding:3px 7px;line-height:1;" onclick="msMoveTag('${key}',${esc(JSON.stringify(val))},${dir})">${dir<0?'↑':'↓'}</button>`;
+
+const msTags=(arr,key)=>{
+  const items=arr||[];
+  if(!items.length)return key==='members'?'<div class="muted" style="padding:4px 0">まだいません</div>':'';
+  return items.map((it,i)=>{
+    const v=typeof it==='string'?it:it.nm;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:${i<items.length-1?'0.5px solid rgba(0,0,0,0.07)':'none'}">
+      <div style="flex:1;font-size:14px;">${esc(v)}</div>
+      <div style="display:flex;gap:4px;">
+        ${i>0?udBtn(key,v,-1):'<span style="width:30px;display:inline-block;"></span>'}
+        ${i<items.length-1?udBtn(key,v,1):'<span style="width:30px;display:inline-block;"></span>'}
+        <span class="tag-x" style="padding:3px 7px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;" onclick="msDelTag('${key}',${esc(JSON.stringify(v))})">×</span>
+      </div>
+    </div>`;
+  }).join('');
+};
 function msAddTag(key,inputId){
   const inp=document.getElementById(inputId),v=inp.value.trim();if(!v)return;
   if(key==='pays'?normPays(MS.pays).find(x=>x.nm===v):(MS[key]||[]).includes(v)){toast('すでにあります');return;}
@@ -230,7 +256,11 @@ function paysListHTML(){
     <div style="flex:1;font-size:14px;">${esc(p.nm)}</div>
     <input class="unit-inp" id="unit-${esc(p.nm)}" value="${esc(p.unit)}" onchange="msPayUnit(${esc(JSON.stringify(p.nm))})">
     <button class="chip${p.sp?' on':''}" style="font-size:12px;padding:5px 10px;" onclick="msTogglePay(${esc(JSON.stringify(p.nm))})">${p.sp?'○ 按分':'× 個人負担'}</button>
-    <button style="background:none;border:none;color:#ccc;font-size:18px;padding:0 2px;line-height:1;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
+    <div style="display:flex;gap:4px;">
+      ${i>0?udBtn('pays',p.nm,-1):'<span style="width:30px;display:inline-block;"></span>'}
+      ${i<pays.length-1?udBtn('pays',p.nm,1):'<span style="width:30px;display:inline-block;"></span>'}
+      <button style="background:none;border:none;color:#ccc;font-size:18px;padding:0 2px;line-height:1;" onclick="msDelTag('pays',${esc(JSON.stringify(p.nm))})">×</button>
+    </div>
   </div>`).join('')||'<div style="font-size:12px;color:#aaa;padding:4px 0;">支払方法がありません</div>';
 }
 function reRenderMsPays(){const el=document.getElementById('ms-pays-list');if(el)el.innerHTML=paysListHTML();}
