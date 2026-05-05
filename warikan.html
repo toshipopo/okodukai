@@ -324,7 +324,7 @@ function pageList(){
 }
 
 function pageMaster(){
-  const sec=(title,key,ph)=>`<div class="card"><div class="sec-hd">${title}</div><div id="ms-tags-${key}" class="fw-mb">${msTags(MS[key],key)}</div>
+  const sec=(title,key,ph)=>`<div class="card"><div class="sec-hd">${title}</div><div id="ms-tags-${key}" style="margin-bottom:10px;">${msTags(MS[key],key)}</div>
     <div class="r8"><input class="inp f1" id="ms-inp-${key}" placeholder="${ph}" type="text" onkeydown="if(event.key==='Enter')msAddTag('${key}','ms-inp-${key}')"><button class="dk-btn" onclick="msAddTag('${key}','ms-inp-${key}')">追加</button></div></div>`;
   return hdr('マスタ設定',"go('list')")
     +'<div class="body">'
