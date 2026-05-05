@@ -398,9 +398,9 @@ function pageDetail(){
     <div class="grid3" style="margin-bottom:10px;">${sumCells}</div>
     ${mbCells?`<div class="divider"></div><div class="grid2">${mbCells}</div>`:''}
     </div>`
+    +openBtns
     +`<div class="slbl">明細（${recs.length}件）</div>`
     +(recs.length?recList:'<div class="empty">記録がまだありません</div>')
-    +openBtns
     +'<div style="text-align:center;padding:16px 0 8px;"><button style="background:none;border:none;color:#bbb;font-size:12px;text-decoration:underline;" onclick="go(\'delete_ev\')">このイベントを削除する</button></div>'
     +'</div>';
 }
